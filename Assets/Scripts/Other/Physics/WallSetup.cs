@@ -1,59 +1,157 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class WallSetup : MonoBehaviour {
-    [Header("Play Area Size")]
-    [SerializeField] private float areaWidth = 10f;
-    [SerializeField] private float areaHeight = 12f;
-    [SerializeField] private float wallThickness = 1f;
+    [Header("References")]
+    [SerializeField] private Camera gameCamera;
 
-    [Header("Position Offset")]
-    [SerializeField] private Vector2 areaCenter = Vector2.zero;
+    [Header("Wall Settings")]
+    [SerializeField] private float wallThickness = 1f;
 
     private EntityManager entityManager;
 
+    private int lastScreenWidth;
+    private int lastScreenHeight;
+    private float lastAspect;
+
+    private List<Entity> wallEntities = new List<Entity>();
+
+    public float ScreenHalfWidth { get; private set; }
+    public float ScreenHalfHeight { get; private set; }
+    public Vector2 ScreenCenter { get; private set; }
+    public float BottomY => ScreenCenter.y - ScreenHalfHeight;
+
     private void Start() {
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+        if (gameCamera == null) {
+            gameCamera = FindGameSceneCamera();
+        }
+
+        if (gameCamera == null) {
+            Debug.LogError("WallSetup: No camera found!");
+            return;
+        }
+
+        lastScreenWidth = Screen.width;
+        lastScreenHeight = Screen.height;
+        lastAspect = gameCamera.aspect;
+
+        CalculateScreenBounds();
         CreateWalls();
     }
 
-    private void CreateWalls() {
-        float halfWidth = areaWidth / 2f;
-        float halfHeight = areaHeight / 2f;
-
-        // Left wall
-        CreateWallEntity(
-            new float3(areaCenter.x - halfWidth - wallThickness / 2f, areaCenter.y, 0f),
-            new float3(wallThickness, areaHeight, 1f)
-        );
-
-        // Right wall
-        CreateWallEntity(
-            new float3(areaCenter.x + halfWidth + wallThickness / 2f, areaCenter.y, 0f),
-            new float3(wallThickness, areaHeight, 1f)
-        );
-
-        // Top wall
-        CreateWallEntity(
-            new float3(areaCenter.x, areaCenter.y + halfHeight + wallThickness / 2f, 0f),
-            new float3(areaWidth + wallThickness * 2f, wallThickness, 1f)
-        );
+    private void Update() {
+        if (HasScreenSizeChanged()) {
+            OnScreenSizeChanged();
+        }
     }
 
-    private void CreateWallEntity(float3 position, float3 size) {
+    private bool HasScreenSizeChanged() {
+        bool changed = Screen.width != lastScreenWidth ||
+                       Screen.height != lastScreenHeight ||
+                       !Mathf.Approximately(gameCamera.aspect, lastAspect);
+
+        if (changed) {
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
+            lastAspect = gameCamera.aspect;
+        }
+
+        return changed;
+    }
+
+    private void OnScreenSizeChanged() {
+        Debug.Log($"Screen size changed: {Screen.width}x{Screen.height}");
+
+        DestroyWalls();
+
+        CalculateScreenBounds();
+        CreateWalls();
+
+        OnBoundsChanged?.Invoke();
+    }
+
+    public event System.Action OnBoundsChanged;
+
+    private void DestroyWalls() {
+        foreach (Entity entity in wallEntities) {
+            if (entityManager.Exists(entity)) {
+                entityManager.DestroyEntity(entity);
+            }
+        }
+
+        wallEntities.Clear();
+    }
+
+    private Camera FindGameSceneCamera() {
+        Scene gameScene = SceneManager.GetSceneByName("GameScene");
+
+        if (!gameScene.IsValid()) {
+            Debug.LogWarning("GameScene not found, using Camera.main");
+            return Camera.main;
+        }
+
+        foreach (GameObject rootObj in gameScene.GetRootGameObjects()) {
+            Camera cam = rootObj.GetComponentInChildren<Camera>();
+            if (cam != null) {
+                return cam;
+            }
+        }
+
+        Debug.LogWarning("No camera in GameScene, using Camera.main");
+        return Camera.main;
+    }
+
+    private void CalculateScreenBounds() {
+        ScreenHalfHeight = gameCamera.orthographicSize;
+        ScreenHalfWidth = ScreenHalfHeight * gameCamera.aspect;
+
+        ScreenCenter = new Vector2(
+            gameCamera.transform.position.x,
+            gameCamera.transform.position.y
+        );
+
+        Debug.Log($"Screen bounds: Width={ScreenHalfWidth * 2:F2}, Height={ScreenHalfHeight * 2:F2}");
+    }
+
+    private void CreateWalls() {
+        // Left wall
+        Entity leftWall = CreateWallEntity(
+            new float3(ScreenCenter.x - ScreenHalfWidth - wallThickness / 2f, ScreenCenter.y, 0f),
+            new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
+        );
+        wallEntities.Add(leftWall);
+
+        // Right wall
+        Entity rightWall = CreateWallEntity(
+            new float3(ScreenCenter.x + ScreenHalfWidth + wallThickness / 2f, ScreenCenter.y, 0f),
+            new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
+        );
+        wallEntities.Add(rightWall);
+
+        // Top wall
+        Entity topWall = CreateWallEntity(
+            new float3(ScreenCenter.x, ScreenCenter.y + ScreenHalfHeight + wallThickness / 2f, 0f),
+            new float3(ScreenHalfWidth * 2f + wallThickness * 2f, wallThickness, 1f)
+        );
+        wallEntities.Add(topWall);
+    }
+
+    private Entity CreateWallEntity(float3 position, float3 size) {
         Entity entity = entityManager.CreateEntity();
 
-        // Transform
         entityManager.AddComponentData(entity, new LocalTransform {
             Position = position,
             Rotation = quaternion.identity,
             Scale = 1f
         });
 
-        // Physics material - perfect bounce
         var material = new Unity.Physics.Material {
             Friction = 0f,
             Restitution = 1f,
@@ -62,7 +160,6 @@ public class WallSetup : MonoBehaviour {
             RestitutionCombinePolicy = Unity.Physics.Material.CombinePolicy.Maximum
         };
 
-        // Box collider
         BlobAssetReference<Unity.Physics.Collider> boxCollider = Unity.Physics.BoxCollider.Create(
             new BoxGeometry {
                 Center = float3.zero,
@@ -81,38 +178,52 @@ public class WallSetup : MonoBehaviour {
         entityManager.AddSharedComponent(entity, new PhysicsWorldIndex {
             Value = 0
         });
+
+        return entity;
     }
 
-    // Debug visualization in editor
-    private void OnDrawGizmos() {
-        float halfWidth = areaWidth / 2f;
-        float halfHeight = areaHeight / 2f;
+    private void OnDestroy() {
+        DestroyWalls();
+    }
 
+    private void OnDrawGizmos() {
+        Camera cam = gameCamera != null ? gameCamera : Camera.main;
+        if (cam == null) return;
+
+        float halfHeight = cam.orthographicSize;
+        float halfWidth = halfHeight * cam.aspect;
+        Vector2 center = new Vector2(cam.transform.position.x, cam.transform.position.y);
+
+        // Visible screen (white)
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireCube(
+            new Vector3(center.x, center.y, 0f),
+            new Vector3(halfWidth * 2f, halfHeight * 2f, 0.1f)
+        );
+
+        // Walls (green)
         Gizmos.color = Color.green;
 
-        // Left wall
         Gizmos.DrawWireCube(
-            new Vector3(areaCenter.x - halfWidth - wallThickness / 2f, areaCenter.y, 0f),
-            new Vector3(wallThickness, areaHeight, 0.1f)
+            new Vector3(center.x - halfWidth - wallThickness / 2f, center.y, 0f),
+            new Vector3(wallThickness, halfHeight * 2f + wallThickness * 2f, 0.1f)
         );
 
-        // Right wall
         Gizmos.DrawWireCube(
-            new Vector3(areaCenter.x + halfWidth + wallThickness / 2f, areaCenter.y, 0f),
-            new Vector3(wallThickness, areaHeight, 0.1f)
+            new Vector3(center.x + halfWidth + wallThickness / 2f, center.y, 0f),
+            new Vector3(wallThickness, halfHeight * 2f + wallThickness * 2f, 0.1f)
         );
 
-        // Top wall
         Gizmos.DrawWireCube(
-            new Vector3(areaCenter.x, areaCenter.y + halfHeight + wallThickness / 2f, 0f),
-            new Vector3(areaWidth + wallThickness * 2f, wallThickness, 0.1f)
+            new Vector3(center.x, center.y + halfHeight + wallThickness / 2f, 0f),
+            new Vector3(halfWidth * 2f + wallThickness * 2f, wallThickness, 0.1f)
         );
 
-        // Bottom boundary (red - no wall)
+        // Bottom line (red - no wall)
         Gizmos.color = Color.red;
         Gizmos.DrawLine(
-            new Vector3(areaCenter.x - halfWidth, areaCenter.y - halfHeight, 0f),
-            new Vector3(areaCenter.x + halfWidth, areaCenter.y - halfHeight, 0f)
+            new Vector3(center.x - halfWidth, center.y - halfHeight, 0f),
+            new Vector3(center.x + halfWidth, center.y - halfHeight, 0f)
         );
     }
 }

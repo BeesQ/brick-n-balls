@@ -1,21 +1,53 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class TestShootInput : MonoBehaviour {
     [Header("References")]
-    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Camera gameCamera;
 
-    [Header("Spawn Point (should match BallSpawner)")]
-    [SerializeField] private Vector2 shootOrigin = new Vector2(0f, -5f);
+    [Header("Spawn Point")]
+    [SerializeField] private float spawnOffsetFromBottom = 1f;
 
     private Mouse mouse;
+    private Vector2 shootOrigin;
 
     private void Start() {
-        if (mainCamera == null) {
-            mainCamera = Camera.main;
+        mouse = Mouse.current;
+
+        if (gameCamera == null) {
+            gameCamera = FindGameSceneCamera();
         }
 
-        mouse = Mouse.current;
+        CalculateShootOrigin();
+    }
+
+    private Camera FindGameSceneCamera() {
+        Scene gameScene = SceneManager.GetSceneByName("GameScene");
+
+        if (!gameScene.IsValid()) {
+            return Camera.main;
+        }
+
+        foreach (GameObject rootObj in gameScene.GetRootGameObjects()) {
+            Camera cam = rootObj.GetComponentInChildren<Camera>();
+            if (cam != null) {
+                return cam;
+            }
+        }
+
+        return Camera.main;
+    }
+
+    private void CalculateShootOrigin() {
+        float bottomY = gameCamera.transform.position.y - gameCamera.orthographicSize;
+
+        shootOrigin = new Vector2(
+            gameCamera.transform.position.x,
+            bottomY + spawnOffsetFromBottom
+        );
+
+        Debug.Log($"Shoot origin: {shootOrigin}");
     }
 
     private void Update() {
@@ -35,7 +67,6 @@ public class TestShootInput : MonoBehaviour {
 
         Vector2 direction = GetShootDirection();
 
-        // Only allow shooting upward
         if (direction.y <= 0.1f) {
             Debug.Log("Must shoot upward");
             return;
@@ -47,7 +78,7 @@ public class TestShootInput : MonoBehaviour {
 
     private Vector2 GetShootDirection() {
         Vector2 mouseScreenPos = mouse.position.ReadValue();
-        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(
+        Vector3 mouseWorldPos = gameCamera.ScreenToWorldPoint(
             new Vector3(mouseScreenPos.x, mouseScreenPos.y, 0f)
         );
         mouseWorldPos.z = 0f;
