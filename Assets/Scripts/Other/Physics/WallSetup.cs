@@ -180,7 +180,7 @@ public class WallSetup : MonoBehaviour {
                 Orientation = quaternion.identity,
                 BevelRadius = 0f
             },
-            CollisionFilter.Default,
+            PhysicsLayers.WallFilter,
             material
         );
 

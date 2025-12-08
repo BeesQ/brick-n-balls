@@ -15,7 +15,7 @@ public class BrickSpawner : MonoBehaviour {
 
     [Header("Brick Settings")]
     [SerializeField] private int startingHealth = 3;
-    [SerializeField] private float brickHeight = 0.4f;
+    [SerializeField] private float brickHeight = 1f;
     [SerializeField] private float brickDepth = 1f;
 
     [Header("Grid Settings")]
@@ -30,6 +30,7 @@ public class BrickSpawner : MonoBehaviour {
 
     private EntityManager entityManager;
     private Scene gameScene;
+    private Transform bricksParent;
 
     private int brickIdCounter = 0;
     private List<BrickData> allBricks = new List<BrickData>();
@@ -71,6 +72,8 @@ public class BrickSpawner : MonoBehaviour {
 
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         gameScene = SceneManager.GetSceneByName("GameScene");
+
+        CreateBricksParent();
 
         if (gameCamera == null) {
             gameCamera = FindGameSceneCamera();
@@ -129,6 +132,14 @@ public class BrickSpawner : MonoBehaviour {
         }
 
         return Camera.main;
+    }
+
+    private void CreateBricksParent() {
+        GameObject parentGO = new GameObject("Bricks");
+        if (gameScene.IsValid()) {
+            SceneManager.MoveGameObjectToScene(parentGO, gameScene);
+        }
+        bricksParent = parentGO.transform;
     }
 
     private void CalculateGridLayout(out float brickWidth, out float startX, out float startY) {
@@ -221,7 +232,7 @@ public class BrickSpawner : MonoBehaviour {
                 Orientation = quaternion.identity,
                 BevelRadius = 0f
             },
-            CollisionFilter.Default,
+            PhysicsLayers.BrickFilter,
             material
         );
 
@@ -250,7 +261,10 @@ public class BrickSpawner : MonoBehaviour {
             visualGO = CreateDefaultBrickVisual(position);
         }
 
-        if (gameScene.IsValid()) {
+        if (bricksParent != null) {
+            visualGO.transform.SetParent(bricksParent);
+        }
+        else if (gameScene.IsValid()) {
             SceneManager.MoveGameObjectToScene(visualGO, gameScene);
         }
 
@@ -340,7 +354,7 @@ public class BrickSpawner : MonoBehaviour {
                 Orientation = quaternion.identity,
                 BevelRadius = 0f
             },
-            CollisionFilter.Default,
+            PhysicsLayers.BrickFilter,
             material
         );
 
@@ -395,6 +409,10 @@ public class BrickSpawner : MonoBehaviour {
         }
 
         ClearAllBricks();
+
+        if (bricksParent != null) {
+            Destroy(bricksParent.gameObject);
+        }
     }
 
     private void OnDrawGizmos() {

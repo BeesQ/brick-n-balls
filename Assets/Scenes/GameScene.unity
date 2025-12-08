@@ -470,7 +470,7 @@ MonoBehaviour:
   gameCamera: {fileID: 0}
   wallSetup: {fileID: 0}
   startingHealth: 3
-  brickHeight: 0.4
+  brickHeight: 1
   brickDepth: 1
   rows: 3
   columns: 8

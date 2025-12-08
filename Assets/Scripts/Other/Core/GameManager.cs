@@ -96,7 +96,6 @@ public class GameManager : MonoBehaviour {
 
     private void OnAllBricksDestroyed() {
         Debug.Log("Victory!");
-        // TODO: Win State
     }
 
     private void TriggerGameOver() {

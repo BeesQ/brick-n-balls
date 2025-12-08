@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
@@ -55,8 +56,18 @@ public class TestShootInput : MonoBehaviour {
             return;
 
         if (mouse.leftButton.wasPressedThisFrame) {
+            if (IsPointerOverUI())
+                return;
+
             TryShoot();
         }
+    }
+
+    private bool IsPointerOverUI() {
+        if (EventSystem.current == null)
+            return false;
+
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     private void TryShoot() {

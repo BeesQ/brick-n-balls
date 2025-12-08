@@ -84,7 +84,7 @@ public class BallSpawner : MonoBehaviour {
                 Center = float3.zero,
                 Radius = ballRadius
             },
-            CollisionFilter.Default,
+            PhysicsLayers.BallFilter,
             material
         );
 
