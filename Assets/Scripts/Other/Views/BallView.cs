@@ -10,15 +10,25 @@ public class BallView : MonoBehaviour {
     private EntityManager entityManager;
     private bool isInitialized = false;
 
+    private bool IsWorldValid =>
+        World.DefaultGameObjectInjectionWorld != null &&
+        World.DefaultGameObjectInjectionWorld.IsCreated;
+
     public void Initialize(Entity entity) {
         linkedEntity = entity;
-        entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        if (IsWorldValid) {
+            entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        }
         isInitialized = true;
     }
 
     private void Update() {
         if (!isInitialized)
             return;
+
+        if (!IsWorldValid) {
+            return;
+        }
 
         if (!entityManager.Exists(linkedEntity)) {
             Destroy(gameObject);
@@ -47,7 +57,7 @@ public class BallView : MonoBehaviour {
     }
 
     private void DestroyBall() {
-        if (entityManager.Exists(linkedEntity)) {
+        if (IsWorldValid && entityManager.Exists(linkedEntity)) {
             entityManager.DestroyEntity(linkedEntity);
         }
 

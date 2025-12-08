@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 
 public class UIManager : MonoBehaviour {
+    public static UIManager Instance { get; private set; }
+
     [Header("Panels")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject hudPanel;
@@ -12,48 +14,91 @@ public class UIManager : MonoBehaviour {
     [SerializeField] private TMP_Text finalScoreText;
     [SerializeField] private TMP_Text ballsRemainingText;
 
+    private void Awake() {
+        if (Instance != null && Instance != this) {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void OnEnable() {
+        GameEvents.OnScoreChanged += UpdateScore;
+        GameEvents.OnBallsRemainingChanged += UpdateBallsRemaining;
+        GameEvents.OnGameOver += ShowGameOver;
+        GameEvents.OnGameStarted += OnGameStarted;
+    }
+
+    private void OnDisable() {
+        GameEvents.OnScoreChanged -= UpdateScore;
+        GameEvents.OnBallsRemainingChanged -= UpdateBallsRemaining;
+        GameEvents.OnGameOver -= ShowGameOver;
+        GameEvents.OnGameStarted -= OnGameStarted;
+    }
+
     private void Start() {
         ShowMainMenu();
     }
 
-    #region Public Methods
+    #region Panel Management
     public void ShowMainMenu() {
-        mainMenuPanel.SetActive(true);
-        hudPanel.SetActive(false);
-        gameOverPanel.SetActive(false);
+        SetPanelState(mainMenu: true, hud: false, gameOver: false);
     }
 
     public void ShowGameHUD() {
-        mainMenuPanel.SetActive(false);
-        hudPanel.SetActive(true);
-        gameOverPanel.SetActive(false);
+        SetPanelState(mainMenu: false, hud: true, gameOver: false);
+
+        UpdateScore(0);
+        UpdateBallsRemaining(5); // Default value
     }
 
     public void ShowGameOver(int finalScore) {
-        mainMenuPanel.SetActive(false);
-        hudPanel.SetActive(false);
-        gameOverPanel.SetActive(true);
-        finalScoreText.text = $"Score: {finalScore}";
+        SetPanelState(mainMenu: false, hud: false, gameOver: true);
+
+        if (finalScoreText != null) {
+            finalScoreText.text = $"Score: {finalScore}";
+        }
     }
 
+    private void SetPanelState(bool mainMenu, bool hud, bool gameOver) {
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(mainMenu);
+
+        if (hudPanel != null)
+            hudPanel.SetActive(hud);
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(gameOver);
+    }
+    #endregion
+
+    #region UI Updates
     public void UpdateScore(int score) {
-        scoreText.text = $"Score: {score}";
+        if (scoreText != null) {
+            scoreText.text = $"Score: {score}";
+        }
     }
 
     public void UpdateBallsRemaining(int balls) {
-        ballsRemainingText.text = $"Balls: {balls}";
-    } 
+        if (ballsRemainingText != null) {
+            ballsRemainingText.text = $"Balls: {balls}";
+        }
+    }
     #endregion
 
-    #region Button callbacks
+    #region Event Handlers
+    private void OnGameStarted() {}
+    #endregion
+
+    #region Button Callbacks
     public void OnStartGameClicked() {
-        SceneLoader.Instance.LoadGameScene();
+        SceneLoader.Instance?.LoadGameScene();
         ShowGameHUD();
     }
 
     public void OnGoBackToMenuClicked() {
-        SceneLoader.Instance.UnloadGameScene();
+        SceneLoader.Instance?.UnloadGameScene();
         ShowMainMenu();
-    } 
+    }
     #endregion
 }

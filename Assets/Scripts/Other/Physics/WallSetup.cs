@@ -26,7 +26,18 @@ public class WallSetup : MonoBehaviour {
     public Vector2 ScreenCenter { get; private set; }
     public float BottomY => ScreenCenter.y - ScreenHalfHeight;
 
+    public event System.Action OnBoundsChanged;
+
+    private bool IsWorldValid =>
+        World.DefaultGameObjectInjectionWorld != null &&
+        World.DefaultGameObjectInjectionWorld.IsCreated;
+
     private void Start() {
+        if (!IsWorldValid) {
+            Debug.LogError("WallSetup: ECS World not available");
+            return;
+        }
+
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         if (gameCamera == null) {
@@ -34,7 +45,7 @@ public class WallSetup : MonoBehaviour {
         }
 
         if (gameCamera == null) {
-            Debug.LogError("WallSetup: No camera found!");
+            Debug.LogError("WallSetup: No camera found");
             return;
         }
 
@@ -77,12 +88,12 @@ public class WallSetup : MonoBehaviour {
         OnBoundsChanged?.Invoke();
     }
 
-    public event System.Action OnBoundsChanged;
-
     private void DestroyWalls() {
-        foreach (Entity entity in wallEntities) {
-            if (entityManager.Exists(entity)) {
-                entityManager.DestroyEntity(entity);
+        if (IsWorldValid) {
+            foreach (Entity entity in wallEntities) {
+                if (entityManager.Exists(entity)) {
+                    entityManager.DestroyEntity(entity);
+                }
             }
         }
 
@@ -121,21 +132,23 @@ public class WallSetup : MonoBehaviour {
     }
 
     private void CreateWalls() {
-        // Left wall
+        if (!IsWorldValid) {
+            Debug.LogError("WallSetup: Cannot create walls - ECS World not available");
+            return;
+        }
+
         Entity leftWall = CreateWallEntity(
             new float3(ScreenCenter.x - ScreenHalfWidth - wallThickness / 2f, ScreenCenter.y, 0f),
             new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
         );
         wallEntities.Add(leftWall);
 
-        // Right wall
         Entity rightWall = CreateWallEntity(
             new float3(ScreenCenter.x + ScreenHalfWidth + wallThickness / 2f, ScreenCenter.y, 0f),
             new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
         );
         wallEntities.Add(rightWall);
 
-        // Top wall
         Entity topWall = CreateWallEntity(
             new float3(ScreenCenter.x, ScreenCenter.y + ScreenHalfHeight + wallThickness / 2f, 0f),
             new float3(ScreenHalfWidth * 2f + wallThickness * 2f, wallThickness, 1f)
@@ -219,7 +232,7 @@ public class WallSetup : MonoBehaviour {
             new Vector3(halfWidth * 2f + wallThickness * 2f, wallThickness, 0.1f)
         );
 
-        // Bottom line (red - no wall)
+        // Bottom line
         Gizmos.color = Color.red;
         Gizmos.DrawLine(
             new Vector3(center.x - halfWidth, center.y - halfHeight, 0f),

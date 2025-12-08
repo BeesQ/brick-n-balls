@@ -1,0 +1,79 @@
+using System;
+
+public static class GameEvents {
+    #region Score Events
+    public static event Action<int> OnScoreChanged;
+
+    public static void ScoreChanged(int newScore) {
+        OnScoreChanged?.Invoke(newScore);
+    }
+    #endregion
+
+    #region Ball Events
+    public static event Action<int> OnBallsRemainingChanged;
+
+    public static void BallsRemainingChanged(int remaining) {
+        OnBallsRemainingChanged?.Invoke(remaining);
+    }
+
+    public static event Action OnBallShot;
+
+    public static void BallShot() {
+        OnBallShot?.Invoke();
+    }
+
+    public static event Action OnBallDestroyed;
+
+    public static void BallDestroyed() {
+        OnBallDestroyed?.Invoke();
+    }
+    #endregion
+
+    #region Brick Events
+    public static event Action<int, int> OnBrickHit;
+
+    public static void BrickHit(int brickId, int remainingHealth) {
+        OnBrickHit?.Invoke(brickId, remainingHealth);
+    }
+
+    public static event Action<int> OnBrickDestroyed;
+
+    public static void BrickDestroyed(int brickId) {
+        OnBrickDestroyed?.Invoke(brickId);
+    }
+
+    public static event Action OnAllBricksDestroyed;
+
+    public static void AllBricksDestroyed() {
+        OnAllBricksDestroyed?.Invoke();
+    }
+    #endregion
+
+    #region Game State Events
+    public static event Action OnGameStarted;
+
+    public static void GameStarted() {
+        OnGameStarted?.Invoke();
+    }
+
+    public static event Action<int> OnGameOver;
+
+    public static void GameOver(int finalScore) {
+        OnGameOver?.Invoke(finalScore);
+    }
+    #endregion
+
+    #region Cleanup
+    public static void ClearAllEvents() {
+        OnScoreChanged = null;
+        OnBallsRemainingChanged = null;
+        OnBallShot = null;
+        OnBallDestroyed = null;
+        OnBrickHit = null;
+        OnBrickDestroyed = null;
+        OnAllBricksDestroyed = null;
+        OnGameStarted = null;
+        OnGameOver = null;
+    }
+    #endregion
+}

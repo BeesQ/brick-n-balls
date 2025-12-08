@@ -24,6 +24,10 @@ public class BallSpawner : MonoBehaviour {
     private int ballIdCounter = 0;
     private Scene gameScene;
 
+    private bool IsWorldValid =>
+        World.DefaultGameObjectInjectionWorld != null &&
+        World.DefaultGameObjectInjectionWorld.IsCreated;
+
     private void Awake() {
         if (Instance != null && Instance != this) {
             Destroy(gameObject);
@@ -33,13 +37,22 @@ public class BallSpawner : MonoBehaviour {
     }
 
     private void Start() {
+        if (!IsWorldValid) {
+            Debug.LogError("BallSpawner: ECS World not available");
+            return;
+        }
+
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-        // Cache reference to GameScene
         gameScene = SceneManager.GetSceneByName("GameScene");
     }
 
     public void SpawnBall(Vector2 direction) {
+        if (!IsWorldValid) {
+            Debug.LogError("BallSpawner: Cannot spawn - ECS World not available");
+            return;
+        }
+
         float3 position = new float3(spawnPosition.x, spawnPosition.y, 0f);
         float3 normalizedDir = math.normalize(new float3(direction.x, direction.y, 0f));
 
@@ -61,7 +74,7 @@ public class BallSpawner : MonoBehaviour {
         var material = new Unity.Physics.Material {
             Friction = 0f,
             Restitution = restitution,
-            CollisionResponse = CollisionResponsePolicy.Collide,
+            CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents,
             FrictionCombinePolicy = Unity.Physics.Material.CombinePolicy.Minimum,
             RestitutionCombinePolicy = Unity.Physics.Material.CombinePolicy.Maximum
         };
