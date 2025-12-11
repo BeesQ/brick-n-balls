@@ -15,15 +15,14 @@ public class BrickSpawner : MonoBehaviour {
 
     [Header("Brick Settings")]
     [SerializeField] private int startingHealth = 3;
-    [SerializeField] private float brickHeight = 1f;
     [SerializeField] private float brickDepth = 1f;
 
     [Header("Grid Settings")]
     [SerializeField] private int rows = 3;
     [SerializeField] private int columns = 8;
-    [SerializeField] private float horizontalPadding = 0.15f;
-    [SerializeField] private float verticalPadding = 0.1f;
-    [SerializeField] private float topOffset = 1.5f;
+    [SerializeField] private float padding = 0.1f;
+    [SerializeField] private float topOffset = 0.5f;
+    [SerializeField] private float sideMargin = 0.3f;
 
     [Header("Prefab")]
     [SerializeField] private GameObject brickVisualPrefab;
@@ -38,6 +37,8 @@ public class BrickSpawner : MonoBehaviour {
     private int lastScreenWidth;
     private int lastScreenHeight;
     private float lastAspect;
+
+    private float currentBrickSize;
 
     private class BrickData {
         public int Id;
@@ -142,25 +143,40 @@ public class BrickSpawner : MonoBehaviour {
         bricksParent = parentGO.transform;
     }
 
-    private void CalculateGridLayout(out float brickWidth, out float startX, out float startY) {
+    private float CalculateBrickSize() {
         float screenHalfHeight = gameCamera.orthographicSize;
         float screenHalfWidth = screenHalfHeight * gameCamera.aspect;
+
+        float availableWidth = (screenHalfWidth * 2f) - (sideMargin * 2f);
+        float availableHeight = screenHalfHeight - topOffset;
+
+        float totalHorizontalPadding = padding * (columns - 1);
+        float totalVerticalPadding = padding * (rows - 1);
+
+        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / columns;
+        float maxBrickHeight = (availableHeight - totalVerticalPadding) / rows;
+
+        return Mathf.Min(maxBrickWidth, maxBrickHeight);
+    }
+
+    private void CalculateGridLayout(out float brickSize, out float startX, out float startY) {
+        float screenHalfHeight = gameCamera.orthographicSize;
         Vector2 screenCenter = new Vector2(
             gameCamera.transform.position.x,
             gameCamera.transform.position.y
         );
 
-        float availableWidth = (screenHalfWidth * 2f) - (horizontalPadding * 2f);
-        float totalPaddingWidth = horizontalPadding * (columns - 1);
-        brickWidth = (availableWidth - totalPaddingWidth) / columns;
+        brickSize = CalculateBrickSize();
+        currentBrickSize = brickSize;
 
-        startX = screenCenter.x - screenHalfWidth + horizontalPadding + (brickWidth / 2f);
-        startY = screenCenter.y + screenHalfHeight - topOffset;
+        float totalGridWidth = (columns * brickSize) + ((columns - 1) * padding);
+        startX = screenCenter.x - (totalGridWidth / 2f) + (brickSize / 2f);
+        startY = screenCenter.y + screenHalfHeight - topOffset - (brickSize / 2f);
     }
 
-    private Vector3 CalculateBrickPosition(int row, int col, float brickWidth, float startX, float startY) {
-        float xPos = startX + col * (brickWidth + horizontalPadding);
-        float yPos = startY - row * (brickHeight + verticalPadding);
+    private Vector3 CalculateBrickPosition(int row, int col, float brickSize, float startX, float startY) {
+        float xPos = startX + col * (brickSize + padding);
+        float yPos = startY - row * (brickSize + padding);
         return new Vector3(xPos, yPos, 0f);
     }
 
@@ -175,25 +191,24 @@ public class BrickSpawner : MonoBehaviour {
             return;
         }
 
-        CalculateGridLayout(out float brickWidth, out float startX, out float startY);
-        Vector2 brickSize = new Vector2(brickWidth, brickHeight);
+        CalculateGridLayout(out float brickSize, out float startX, out float startY);
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
-                Vector3 position = CalculateBrickPosition(row, col, brickWidth, startX, startY);
+                Vector3 position = CalculateBrickPosition(row, col, brickSize, startX, startY);
                 SpawnBrick(position, brickSize, row, col);
             }
         }
 
-        Debug.Log($"Spawned {rows * columns} bricks in {rows}x{columns} grid");
+        Debug.Log($"Spawned {rows * columns} bricks in {rows}x{columns} grid (size: {brickSize:F2})");
     }
 
-    private void SpawnBrick(Vector3 position, Vector2 size, int row, int col) {
+    private void SpawnBrick(Vector3 position, float brickSize, int row, int col) {
         float3 pos = new float3(position.x, position.y, 0f);
-        float3 brickSize = new float3(size.x, size.y, brickDepth);
+        float3 colliderSize = new float3(brickSize, brickSize, brickDepth);
 
-        Entity brickEntity = CreateBrickPhysicsEntity(pos, brickSize);
-        BrickView brickView = CreateBrickVisual(brickEntity, position, size);
+        Entity brickEntity = CreateBrickPhysicsEntity(pos, colliderSize);
+        BrickView brickView = CreateBrickVisual(brickEntity, position, brickSize);
 
         BrickData data = new BrickData {
             Id = brickIdCounter,
@@ -251,7 +266,7 @@ public class BrickSpawner : MonoBehaviour {
         return entity;
     }
 
-    private BrickView CreateBrickVisual(Entity entity, Vector3 position, Vector2 size) {
+    private BrickView CreateBrickVisual(Entity entity, Vector3 position, float brickSize) {
         GameObject visualGO;
 
         if (brickVisualPrefab != null) {
@@ -273,7 +288,7 @@ public class BrickSpawner : MonoBehaviour {
             brickView = visualGO.AddComponent<BrickView>();
         }
 
-        brickView.SetSize(size);
+        brickView.SetSize(brickSize);
         brickView.Initialize(entity, brickIdCounter, startingHealth);
 
         return brickView;
@@ -303,17 +318,15 @@ public class BrickSpawner : MonoBehaviour {
         if (!IsWorldValid || gameCamera == null)
             return;
 
-        CalculateGridLayout(out float brickWidth, out float startX, out float startY);
-        Vector2 brickSize = new Vector2(brickWidth, brickHeight);
-        float3 colliderSize = new float3(brickWidth, brickHeight, brickDepth);
+        CalculateGridLayout(out float brickSize, out float startX, out float startY);
+        float3 colliderSize = new float3(brickSize, brickSize, brickDepth);
 
         foreach (BrickData brick in allBricks) {
             if (brick.IsDestroyed)
                 continue;
 
-            Vector3 newPosition = CalculateBrickPosition(brick.Row, brick.Column, brickWidth, startX, startY);
+            Vector3 newPosition = CalculateBrickPosition(brick.Row, brick.Column, brickSize, startX, startY);
 
-            // Update ECS entity position
             if (entityManager.Exists(brick.Entity)) {
                 entityManager.SetComponentData(brick.Entity, new LocalTransform {
                     Position = new float3(newPosition.x, newPosition.y, 0f),
@@ -321,18 +334,16 @@ public class BrickSpawner : MonoBehaviour {
                     Scale = 1f
                 });
 
-                // Update collider size
                 UpdateBrickCollider(brick.Entity, colliderSize);
             }
 
-            // Update visual position and size
             if (brick.View != null) {
                 brick.View.transform.position = newPosition;
                 brick.View.SetSize(brickSize);
             }
         }
 
-        Debug.Log($"Repositioned {ActiveBrickCount} bricks");
+        Debug.Log($"Repositioned {ActiveBrickCount} bricks (size: {brickSize:F2})");
     }
 
     private void UpdateBrickCollider(Entity entity, float3 size) {
@@ -423,23 +434,37 @@ public class BrickSpawner : MonoBehaviour {
         float halfWidth = halfHeight * cam.aspect;
         Vector2 center = new Vector2(cam.transform.position.x, cam.transform.position.y);
 
+        Gizmos.color = Color.yellow;
+        Vector3 middleLine = new Vector3(center.x, center.y, 0f);
+        Gizmos.DrawLine(
+            middleLine + Vector3.left * halfWidth,
+            middleLine + Vector3.right * halfWidth
+        );
+
         Gizmos.color = Color.cyan;
 
-        float availableWidth = (halfWidth * 2f) - (horizontalPadding * 2f);
-        float totalPaddingWidth = horizontalPadding * (columns - 1);
-        float brickWidth = (availableWidth - totalPaddingWidth) / columns;
+        float availableWidth = (halfWidth * 2f) - (sideMargin * 2f);
+        float availableHeight = halfHeight - topOffset;
 
-        float startX = center.x - halfWidth + horizontalPadding + (brickWidth / 2f);
-        float startY = center.y + halfHeight - topOffset;
+        float totalHorizontalPadding = padding * (columns - 1);
+        float totalVerticalPadding = padding * (rows - 1);
+
+        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / columns;
+        float maxBrickHeight = (availableHeight - totalVerticalPadding) / rows;
+        float brickSize = Mathf.Min(maxBrickWidth, maxBrickHeight);
+
+        float totalGridWidth = (columns * brickSize) + ((columns - 1) * padding);
+        float startX = center.x - (totalGridWidth / 2f) + (brickSize / 2f);
+        float startY = center.y + halfHeight - topOffset - (brickSize / 2f);
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
-                float xPos = startX + col * (brickWidth + horizontalPadding);
-                float yPos = startY - row * (brickHeight + verticalPadding);
+                float xPos = startX + col * (brickSize + padding);
+                float yPos = startY - row * (brickSize + padding);
 
                 Gizmos.DrawWireCube(
                     new Vector3(xPos, yPos, 0f),
-                    new Vector3(brickWidth, brickHeight, 0.1f)
+                    new Vector3(brickSize, brickSize, 0.1f)
                 );
             }
         }

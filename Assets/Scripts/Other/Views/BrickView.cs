@@ -106,6 +106,10 @@ public class BrickView : MonoBehaviour, IDamageable {
         Destroy(gameObject);
     }
 
+    public void SetSize(float size) {
+        SetSize(new Vector2(size, size));
+    }
+
     public void SetSize(Vector2 size) {
         if (spriteRenderer != null && spriteRenderer.sprite != null) {
             Vector2 spriteSize = spriteRenderer.sprite.bounds.size;

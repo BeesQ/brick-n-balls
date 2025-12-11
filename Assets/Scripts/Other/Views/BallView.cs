@@ -1,14 +1,16 @@
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BallView : MonoBehaviour {
-    [Header("Boundaries")]
-    [SerializeField] private float destroyBelowY = -6f;
-
     private Entity linkedEntity;
     private EntityManager entityManager;
     private bool isInitialized = false;
+
+    private Camera gameCamera;
+    private float ballRadius;
+    private float destroyBelowY;
 
     private bool IsWorldValid =>
         World.DefaultGameObjectInjectionWorld != null &&
@@ -19,7 +21,49 @@ public class BallView : MonoBehaviour {
         if (IsWorldValid) {
             entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         }
+
+        gameCamera = FindGameSceneCamera();
+        CalculateBallRadius();
+        CalculateDestroyThreshold();
+
         isInitialized = true;
+    }
+
+    private Camera FindGameSceneCamera() {
+        Scene scene = SceneManager.GetSceneByName("GameScene");
+
+        if (scene.IsValid()) {
+            foreach (GameObject rootObj in scene.GetRootGameObjects()) {
+                Camera cam = rootObj.GetComponentInChildren<Camera>();
+                if (cam != null) {
+                    return cam;
+                }
+            }
+        }
+
+        return Camera.main;
+    }
+
+    private void CalculateBallRadius() {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null && sr.sprite != null) {
+            ballRadius = sr.bounds.extents.y;
+        }
+        else {
+            ballRadius = transform.localScale.y * 0.5f;
+        }
+    }
+
+    private void CalculateDestroyThreshold() {
+        if (gameCamera == null) {
+            destroyBelowY = -10f;
+            return;
+        }
+
+        float screenBottom = gameCamera.transform.position.y - gameCamera.orthographicSize;
+        float onePixelInWorld = (gameCamera.orthographicSize * 2f) / Screen.height;
+
+        destroyBelowY = screenBottom - ballRadius - onePixelInWorld;
     }
 
     private void Update() {
