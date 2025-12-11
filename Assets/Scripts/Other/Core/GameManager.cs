@@ -10,11 +10,13 @@ public class GameManager : MonoBehaviour {
     private int activeBallsInPlay;
     private int currentScore;
     private bool isGameOver;
+    private bool isGameActive;
 
     #region Properties
     public int BallsRemaining => ballsRemaining;
     public int Score => currentScore;
     public bool IsGameOver => isGameOver;
+    public bool IsGameActive => isGameActive;
     #endregion
 
     private void Awake() {
@@ -34,7 +36,8 @@ public class GameManager : MonoBehaviour {
     }
 
     private void Start() {
-        StartNewGame();
+        isGameActive = false;
+        isGameOver = true;
     }
 
     public void StartNewGame() {
@@ -42,6 +45,7 @@ public class GameManager : MonoBehaviour {
         activeBallsInPlay = 0;
         currentScore = 0;
         isGameOver = false;
+        isGameActive = true;
 
         GameEvents.BallsRemainingChanged(ballsRemaining);
         GameEvents.ScoreChanged(currentScore);
@@ -51,11 +55,11 @@ public class GameManager : MonoBehaviour {
     }
 
     public bool CanShoot() {
-        return ballsRemaining > 0 && !isGameOver;
+        return isGameActive && ballsRemaining > 0 && !isGameOver;
     }
 
     public void OnBallShot() {
-        if (isGameOver)
+        if (isGameOver || !isGameActive)
             return;
 
         ballsRemaining--;
@@ -68,7 +72,7 @@ public class GameManager : MonoBehaviour {
     }
 
     public void OnBallDestroyed() {
-        if (isGameOver)
+        if (isGameOver || !isGameActive)
             return;
 
         activeBallsInPlay--;
@@ -83,19 +87,17 @@ public class GameManager : MonoBehaviour {
     }
 
     public void AddScore(int points) {
-        if (isGameOver)
+        if (isGameOver || !isGameActive)
             return;
 
         currentScore += points;
-
-        // Note: GameEvents.ScoreChanged is called from BrickView.TakeDamage
-        // to ensure it fires after score update
 
         Debug.Log($"Score: {currentScore}");
     }
 
     private void OnAllBricksDestroyed() {
         Debug.Log("Victory!");
+        TriggerGameOver();
     }
 
     private void TriggerGameOver() {
@@ -103,6 +105,7 @@ public class GameManager : MonoBehaviour {
             return;
 
         isGameOver = true;
+        isGameActive = false;
 
         Debug.Log($"=== GAME OVER === Final Score: {currentScore}");
 
@@ -111,7 +114,11 @@ public class GameManager : MonoBehaviour {
 
     public void ResetGame() {
         BrickSpawner.Instance?.ResetBricks();
-
         StartNewGame();
+    }
+
+    public void StopGame() {
+        isGameActive = false;
+        isGameOver = true;
     }
 }

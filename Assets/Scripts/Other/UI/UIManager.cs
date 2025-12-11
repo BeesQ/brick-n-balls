@@ -49,7 +49,7 @@ public class UIManager : MonoBehaviour {
         SetPanelState(mainMenu: false, hud: true, gameOver: false);
 
         UpdateScore(0);
-        UpdateBallsRemaining(5); // Default value
+        UpdateBallsRemaining(10);
     }
 
     public void ShowGameOver(int finalScore) {
@@ -87,17 +87,16 @@ public class UIManager : MonoBehaviour {
     #endregion
 
     #region Event Handlers
-    private void OnGameStarted() {}
+    private void OnGameStarted() { }
     #endregion
 
     #region Button Callbacks
     public void OnStartGameClicked() {
-        SceneLoader.Instance?.LoadGameScene();
         ShowGameHUD();
+        GameManager.Instance?.ResetGame();
     }
 
     public void OnGoBackToMenuClicked() {
-        SceneLoader.Instance?.UnloadGameScene();
         ShowMainMenu();
     }
     #endregion

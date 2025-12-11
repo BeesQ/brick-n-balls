@@ -39,6 +39,7 @@ public class BrickSpawner : MonoBehaviour {
     private float lastAspect;
 
     private float currentBrickSize;
+    private bool isInitialized = false;
 
     private class BrickData {
         public int Id;
@@ -66,6 +67,10 @@ public class BrickSpawner : MonoBehaviour {
     }
 
     private void Start() {
+        Initialize();
+    }
+
+    private void Initialize() {
         if (!IsWorldValid) {
             Debug.LogError("BrickSpawner: ECS World not available");
             return;
@@ -92,10 +97,13 @@ public class BrickSpawner : MonoBehaviour {
         lastScreenHeight = Screen.height;
         lastAspect = gameCamera != null ? gameCamera.aspect : 1f;
 
-        SpawnBricks();
+        isInitialized = true;
     }
 
     private void Update() {
+        if (!isInitialized || allBricks.Count == 0)
+            return;
+
         if (HasScreenSizeChanged()) {
             RepositionBricks();
         }
@@ -136,6 +144,9 @@ public class BrickSpawner : MonoBehaviour {
     }
 
     private void CreateBricksParent() {
+        if (bricksParent != null)
+            return;
+
         GameObject parentGO = new GameObject("Bricks");
         if (gameScene.IsValid()) {
             SceneManager.MoveGameObjectToScene(parentGO, gameScene);
@@ -315,7 +326,7 @@ public class BrickSpawner : MonoBehaviour {
     }
 
     public void RepositionBricks() {
-        if (!IsWorldValid || gameCamera == null)
+        if (!IsWorldValid || gameCamera == null || allBricks.Count == 0)
             return;
 
         CalculateGridLayout(out float brickSize, out float startX, out float startY);

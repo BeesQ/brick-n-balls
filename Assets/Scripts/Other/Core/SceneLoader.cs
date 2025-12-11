@@ -12,7 +12,8 @@ public class SceneLoader : MonoBehaviour {
 
     private bool isGameSceneLoaded = false;
 
-    #region Public Methods
+    public bool IsGameSceneLoaded => isGameSceneLoaded;
+
     private void Awake() {
         if (Instance != null && Instance != this) {
             Destroy(gameObject);
@@ -23,6 +24,11 @@ public class SceneLoader : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
     }
 
+    private void Start() {
+        LoadGameScene();
+    }
+
+    #region Public Methods
     public void LoadGameScene() {
         if (isGameSceneLoaded)
             return;
@@ -45,6 +51,24 @@ public class SceneLoader : MonoBehaviour {
             };
     }
 
-    public bool IsGameSceneLoaded => isGameSceneLoaded; 
-    #endregion
+    public void ReloadGameScene(Action onComplete = null) {
+        if (!isGameSceneLoaded) {
+            LoadGameScene();
+            return;
+        }
+
+        SceneManager.UnloadSceneAsync(GameSceneName)
+            .completed += _ => {
+                isGameSceneLoaded = false;
+                OnGameSceneUnloaded?.Invoke();
+
+                SceneManager.LoadSceneAsync(GameSceneName, LoadSceneMode.Additive)
+                    .completed += _ => {
+                        isGameSceneLoaded = true;
+                        OnGameSceneLoaded?.Invoke();
+                        onComplete?.Invoke();
+                    };
+            };
+    }
+    #endregion Public Methods
 }
