@@ -12,6 +12,7 @@ public class BallSpawner : MonoBehaviour {
     [SerializeField] private float ballSpeed = 12f;
     [SerializeField] private float ballMass = 1f;
     [SerializeField] private float restitution = 1f;
+    [SerializeField] private float collisionPadding = 0.05f;
 
     [Header("Prefab")]
     [SerializeField] private GameObject ballVisualPrefab;
@@ -58,19 +59,16 @@ public class BallSpawner : MonoBehaviour {
             Vector3 prefabScale = ballVisualPrefab.transform.localScale;
             Vector2 spriteExtents = sr.sprite.bounds.extents;
             ballRadius = Mathf.Max(spriteExtents.x * prefabScale.x, spriteExtents.y * prefabScale.y);
-            Debug.Log($"BallSpawner: Calculated radius from sprite: {ballRadius}");
             return;
         }
 
         MeshRenderer mr = ballVisualPrefab.GetComponent<MeshRenderer>();
         if (mr != null) {
             ballRadius = mr.bounds.extents.x;
-            Debug.Log($"BallSpawner: Calculated radius from mesh: {ballRadius}");
             return;
         }
 
         ballRadius = 0.3f;
-        Debug.LogWarning("BallSpawner: Could not determine radius, using default");
     }
 
     public void SpawnBall(Vector2 spawnPosition, Vector2 direction) {
@@ -108,7 +106,7 @@ public class BallSpawner : MonoBehaviour {
         BlobAssetReference<Unity.Physics.Collider> sphereCollider = Unity.Physics.SphereCollider.Create(
             new SphereGeometry {
                 Center = float3.zero,
-                Radius = ballRadius
+                Radius = Mathf.Max(0.01f, ballRadius - collisionPadding)
             },
             PhysicsLayers.BallFilter,
             material

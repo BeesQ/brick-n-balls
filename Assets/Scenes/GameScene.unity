@@ -165,6 +165,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCamera: {fileID: 0}
   wallThickness: 1
+  visualInset: 1
+  wallSprite: {fileID: 21300000, guid: 533e1756ec7d0fb46bc14abc41f61593, type: 3}
+  wallColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  wallSortingOrder: -1
+  wallSortingLayer: Default
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -609,6 +614,7 @@ MonoBehaviour:
   ballSpeed: 15
   ballMass: 1
   restitution: 1
+  collisionPadding: 0.1
   ballVisualPrefab: {fileID: 3956555345575195297, guid: b9c5ea4f0e7576d4dbd52d2a4ae16397, type: 3}
 --- !u!1 &1375439018
 GameObject:
@@ -654,7 +660,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3cd3a7638802b4fa4ec5364e0bb3b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingBalls: 10
+  startingBalls: 3
 --- !u!1 &2089317688
 GameObject:
   m_ObjectHideFlags: 0

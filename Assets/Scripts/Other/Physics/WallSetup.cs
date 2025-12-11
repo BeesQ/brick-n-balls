@@ -12,6 +12,13 @@ public class WallSetup : MonoBehaviour {
 
     [Header("Wall Settings")]
     [SerializeField] private float wallThickness = 1f;
+    [SerializeField] private float visualInset = 0.05f;
+
+    [Header("Wall Visuals")]
+    [SerializeField] private Sprite wallSprite;
+    [SerializeField] private Color wallColor = Color.gray;
+    [SerializeField] private int wallSortingOrder = -1;
+    [SerializeField] private string wallSortingLayer = "Default";
 
     private EntityManager entityManager;
 
@@ -20,6 +27,9 @@ public class WallSetup : MonoBehaviour {
     private float lastAspect;
 
     private List<Entity> wallEntities = new List<Entity>();
+    private List<GameObject> wallVisuals = new List<GameObject>();
+    private Transform wallVisualsParent;
+    private Scene gameScene;
 
     public float ScreenHalfWidth { get; private set; }
     public float ScreenHalfHeight { get; private set; }
@@ -39,6 +49,7 @@ public class WallSetup : MonoBehaviour {
         }
 
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        gameScene = SceneManager.GetSceneByName("GameScene");
 
         if (gameCamera == null) {
             gameCamera = FindGameSceneCamera();
@@ -49,12 +60,23 @@ public class WallSetup : MonoBehaviour {
             return;
         }
 
+        CreateWallVisualsParent();
+
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
         lastAspect = gameCamera.aspect;
 
         CalculateScreenBounds();
         CreateWalls();
+    }
+
+    private void CreateWallVisualsParent() {
+        GameObject parentGO = new GameObject("WallVisuals");
+        wallVisualsParent = parentGO.transform;
+
+        if (gameScene.IsValid()) {
+            SceneManager.MoveGameObjectToScene(parentGO, gameScene);
+        }
     }
 
     private void Update() {
@@ -98,17 +120,25 @@ public class WallSetup : MonoBehaviour {
         }
 
         wallEntities.Clear();
+
+        foreach (GameObject visual in wallVisuals) {
+            if (visual != null) {
+                Destroy(visual);
+            }
+        }
+
+        wallVisuals.Clear();
     }
 
     private Camera FindGameSceneCamera() {
-        Scene gameScene = SceneManager.GetSceneByName("GameScene");
+        Scene scene = SceneManager.GetSceneByName("GameScene");
 
-        if (!gameScene.IsValid()) {
+        if (!scene.IsValid()) {
             Debug.LogWarning("GameScene not found, using Camera.main");
             return Camera.main;
         }
 
-        foreach (GameObject rootObj in gameScene.GetRootGameObjects()) {
+        foreach (GameObject rootObj in scene.GetRootGameObjects()) {
             Camera cam = rootObj.GetComponentInChildren<Camera>();
             if (cam != null) {
                 return cam;
@@ -137,23 +167,36 @@ public class WallSetup : MonoBehaviour {
             return;
         }
 
+        float insetWidth = ScreenHalfWidth - visualInset;
+        float insetHeight = ScreenHalfHeight - visualInset;
+
+        float leftX = ScreenCenter.x - insetWidth - wallThickness / 2f;
+        float rightX = ScreenCenter.x + insetWidth + wallThickness / 2f;
+        float topY = ScreenCenter.y + insetHeight + wallThickness / 2f;
+
+        float sideWallHeight = insetHeight * 2f + wallThickness * 2f;
+        float topWallWidth = insetWidth * 2f + wallThickness * 2f;
+
         Entity leftWall = CreateWallEntity(
-            new float3(ScreenCenter.x - ScreenHalfWidth - wallThickness / 2f, ScreenCenter.y, 0f),
-            new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
+            new float3(leftX, ScreenCenter.y, 0f),
+            new float3(wallThickness, sideWallHeight, 1f)
         );
         wallEntities.Add(leftWall);
+        CreateWallVisual("LeftWall", new Vector3(leftX, ScreenCenter.y, 0f), wallThickness, sideWallHeight);
 
         Entity rightWall = CreateWallEntity(
-            new float3(ScreenCenter.x + ScreenHalfWidth + wallThickness / 2f, ScreenCenter.y, 0f),
-            new float3(wallThickness, ScreenHalfHeight * 2f + wallThickness * 2f, 1f)
+            new float3(rightX, ScreenCenter.y, 0f),
+            new float3(wallThickness, sideWallHeight, 1f)
         );
         wallEntities.Add(rightWall);
+        CreateWallVisual("RightWall", new Vector3(rightX, ScreenCenter.y, 0f), wallThickness, sideWallHeight);
 
         Entity topWall = CreateWallEntity(
-            new float3(ScreenCenter.x, ScreenCenter.y + ScreenHalfHeight + wallThickness / 2f, 0f),
-            new float3(ScreenHalfWidth * 2f + wallThickness * 2f, wallThickness, 1f)
+            new float3(ScreenCenter.x, topY, 0f),
+            new float3(topWallWidth, wallThickness, 1f)
         );
         wallEntities.Add(topWall);
+        CreateWallVisual("TopWall", new Vector3(ScreenCenter.x, topY, 0f), topWallWidth, wallThickness);
     }
 
     private Entity CreateWallEntity(float3 position, float3 size) {
@@ -195,8 +238,52 @@ public class WallSetup : MonoBehaviour {
         return entity;
     }
 
+    private void CreateWallVisual(string name, Vector3 position, float width, float height) {
+        GameObject wallGO = new GameObject(name);
+        wallGO.transform.position = position;
+
+        if (wallVisualsParent != null) {
+            wallGO.transform.SetParent(wallVisualsParent);
+        }
+        else if (gameScene.IsValid()) {
+            SceneManager.MoveGameObjectToScene(wallGO, gameScene);
+        }
+
+        SpriteRenderer sr = wallGO.AddComponent<SpriteRenderer>();
+        sr.color = wallColor;
+        sr.sortingOrder = wallSortingOrder;
+        sr.sortingLayerName = wallSortingLayer;
+
+        if (wallSprite != null) {
+            sr.sprite = wallSprite;
+            sr.drawMode = SpriteDrawMode.Tiled;
+            sr.tileMode = SpriteTileMode.Adaptive;
+            sr.size = new Vector2(width, height);
+        }
+        else {
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
+
+            sr.sprite = Sprite.Create(
+                tex,
+                new Rect(0, 0, 1, 1),
+                new Vector2(0.5f, 0.5f),
+                1f
+            );
+
+            wallGO.transform.localScale = new Vector3(width, height, 1f);
+        }
+
+        wallVisuals.Add(wallGO);
+    }
+
     private void OnDestroy() {
         DestroyWalls();
+
+        if (wallVisualsParent != null) {
+            Destroy(wallVisualsParent.gameObject);
+        }
     }
 
     private void OnDrawGizmos() {
@@ -207,32 +294,32 @@ public class WallSetup : MonoBehaviour {
         float halfWidth = halfHeight * cam.aspect;
         Vector2 center = new Vector2(cam.transform.position.x, cam.transform.position.y);
 
-        // Visible screen (white)
+        float insetHalfWidth = halfWidth - visualInset;
+        float insetHalfHeight = halfHeight - visualInset;
+
         Gizmos.color = Color.white;
         Gizmos.DrawWireCube(
             new Vector3(center.x, center.y, 0f),
             new Vector3(halfWidth * 2f, halfHeight * 2f, 0.1f)
         );
 
-        // Walls (green)
         Gizmos.color = Color.green;
 
         Gizmos.DrawWireCube(
-            new Vector3(center.x - halfWidth - wallThickness / 2f, center.y, 0f),
-            new Vector3(wallThickness, halfHeight * 2f + wallThickness * 2f, 0.1f)
+            new Vector3(center.x - insetHalfWidth - wallThickness / 2f, center.y, 0f),
+            new Vector3(wallThickness, insetHalfHeight * 2f + wallThickness * 2f, 0.1f)
         );
 
         Gizmos.DrawWireCube(
-            new Vector3(center.x + halfWidth + wallThickness / 2f, center.y, 0f),
-            new Vector3(wallThickness, halfHeight * 2f + wallThickness * 2f, 0.1f)
+            new Vector3(center.x + insetHalfWidth + wallThickness / 2f, center.y, 0f),
+            new Vector3(wallThickness, insetHalfHeight * 2f + wallThickness * 2f, 0.1f)
         );
 
         Gizmos.DrawWireCube(
-            new Vector3(center.x, center.y + halfHeight + wallThickness / 2f, 0f),
-            new Vector3(halfWidth * 2f + wallThickness * 2f, wallThickness, 0.1f)
+            new Vector3(center.x, center.y + insetHalfHeight + wallThickness / 2f, 0f),
+            new Vector3(insetHalfWidth * 2f + wallThickness * 2f, wallThickness, 0.1f)
         );
 
-        // Bottom line
         Gizmos.color = Color.red;
         Gizmos.DrawLine(
             new Vector3(center.x - halfWidth, center.y - halfHeight, 0f),
