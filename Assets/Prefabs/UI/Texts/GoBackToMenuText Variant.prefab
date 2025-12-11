@@ -96,7 +96,7 @@ PrefabInstance:
       propertyPath: m_text
       value: 'Go Back
 
-        To Menu
+        to Menu
 
 '
       objectReference: {fileID: 0}

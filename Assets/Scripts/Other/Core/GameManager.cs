@@ -4,7 +4,7 @@ public class GameManager : MonoBehaviour {
     public static GameManager Instance { get; private set; }
 
     [Header("Game Settings")]
-    [SerializeField] private int startingBalls = 5;
+    [SerializeField] private int startingBalls = 10;
 
     private int ballsRemaining;
     private int activeBallsInPlay;
@@ -91,6 +91,7 @@ public class GameManager : MonoBehaviour {
             return;
 
         currentScore += points;
+        GameEvents.ScoreChanged(currentScore);
 
         Debug.Log($"Score: {currentScore}");
     }
