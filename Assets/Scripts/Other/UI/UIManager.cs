@@ -49,7 +49,7 @@ public class UIManager : MonoBehaviour {
         SetPanelState(mainMenu: false, hud: true, gameOver: false);
 
         UpdateScore(0);
-        UpdateBallsRemaining(3);
+        UpdateBallsRemaining(GameManager.Instance?.StartingBalls ?? 5);
     }
 
     public void ShowGameOver(int finalScore) {

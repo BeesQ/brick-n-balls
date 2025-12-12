@@ -9,7 +9,6 @@ public class BallSpawner : MonoBehaviour {
     public static BallSpawner Instance { get; private set; }
 
     [Header("Ball Settings")]
-    [SerializeField] private float ballSpeed = 12f;
     [SerializeField] private float ballMass = 1f;
     [SerializeField] private float restitution = 1f;
     [SerializeField] private float collisionPadding = 0.05f;
@@ -17,10 +16,15 @@ public class BallSpawner : MonoBehaviour {
     [Header("Prefab")]
     [SerializeField] private GameObject ballVisualPrefab;
 
+
     private EntityManager entityManager;
     private int ballIdCounter = 0;
     private Scene gameScene;
     private float ballRadius;
+
+    #region GameManager Values
+    private float BallSpeed => GameManager.Instance?.BallSpeed ?? 15f;
+    #endregion GameManager Values
 
     private bool IsWorldValid =>
         World.DefaultGameObjectInjectionWorld != null &&
@@ -116,7 +120,7 @@ public class BallSpawner : MonoBehaviour {
             Value = sphereCollider
         });
 
-        float3 velocity = direction * ballSpeed;
+        float3 velocity = direction * BallSpeed;
         entityManager.AddComponentData(entity, new PhysicsVelocity {
             Linear = velocity,
             Angular = float3.zero

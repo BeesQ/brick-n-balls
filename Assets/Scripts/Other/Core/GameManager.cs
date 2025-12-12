@@ -3,8 +3,19 @@ using UnityEngine;
 public class GameManager : MonoBehaviour {
     public static GameManager Instance { get; private set; }
 
-    [Header("Game Settings")]
-    [SerializeField] private int startingBalls = 10;
+    [Header("Ball Settings")]
+    [SerializeField] private int startingBalls = 5;
+    [SerializeField] private float ballSpeed = 15f;
+
+    [Header("Brick Settings")]
+    [SerializeField] private int brickRows = 3;
+    [SerializeField] private int brickColumns = 8;
+    [SerializeField] private int brickStartingHealth = 3;
+
+    [Header("Grid Layout")]
+    [SerializeField] private float brickPadding = 0.1f;
+    [SerializeField] private float brickTopOffset = 0.5f;
+    [SerializeField] private float brickSideMargin = 0.3f;
 
     private int ballsRemaining;
     private int activeBallsInPlay;
@@ -12,7 +23,18 @@ public class GameManager : MonoBehaviour {
     private bool isGameOver;
     private bool isGameActive;
 
-    #region Properties
+    #region Config Properties
+    public int StartingBalls => startingBalls;
+    public float BallSpeed => ballSpeed;
+    public int BrickRows => brickRows;
+    public int BrickColumns => brickColumns;
+    public int BrickStartingHealth => brickStartingHealth;
+    public float BrickPadding => brickPadding;
+    public float BrickTopOffset => brickTopOffset;
+    public float BrickSideMargin => brickSideMargin;
+    #endregion
+
+    #region Runtime Properties
     public int BallsRemaining => ballsRemaining;
     public int Score => currentScore;
     public bool IsGameOver => isGameOver;

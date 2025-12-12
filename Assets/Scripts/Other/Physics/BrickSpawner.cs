@@ -14,15 +14,7 @@ public class BrickSpawner : MonoBehaviour {
     [SerializeField] private WallSetup wallSetup;
 
     [Header("Brick Settings")]
-    [SerializeField] private int startingHealth = 3;
     [SerializeField] private float brickDepth = 1f;
-
-    [Header("Grid Settings")]
-    [SerializeField] private int rows = 3;
-    [SerializeField] private int columns = 8;
-    [SerializeField] private float padding = 0.1f;
-    [SerializeField] private float topOffset = 0.5f;
-    [SerializeField] private float sideMargin = 0.3f;
 
     [Header("Prefab")]
     [SerializeField] private GameObject brickVisualPrefab;
@@ -40,6 +32,15 @@ public class BrickSpawner : MonoBehaviour {
 
     private float currentBrickSize;
     private bool isInitialized = false;
+
+    #region GameManager Values
+    private int Rows => GameManager.Instance?.BrickRows ?? 3;
+    private int Columns => GameManager.Instance?.BrickColumns ?? 8;
+    private int StartingHealth => GameManager.Instance?.BrickStartingHealth ?? 3;
+    private float Padding => GameManager.Instance?.BrickPadding ?? 0.1f;
+    private float TopOffset => GameManager.Instance?.BrickTopOffset ?? 2f;
+    private float SideMargin => GameManager.Instance?.BrickSideMargin ?? 0.3f;
+    #endregion GameManager Values
 
     private class BrickData {
         public int Id;
@@ -158,14 +159,14 @@ public class BrickSpawner : MonoBehaviour {
         float screenHalfHeight = gameCamera.orthographicSize;
         float screenHalfWidth = screenHalfHeight * gameCamera.aspect;
 
-        float availableWidth = (screenHalfWidth * 2f) - (sideMargin * 2f);
-        float availableHeight = screenHalfHeight - topOffset;
+        float availableWidth = (screenHalfWidth * 2f) - (SideMargin * 2f);
+        float availableHeight = screenHalfHeight - TopOffset;
 
-        float totalHorizontalPadding = padding * (columns - 1);
-        float totalVerticalPadding = padding * (rows - 1);
+        float totalHorizontalPadding = Padding * (Columns - 1);
+        float totalVerticalPadding = Padding * (Rows - 1);
 
-        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / columns;
-        float maxBrickHeight = (availableHeight - totalVerticalPadding) / rows;
+        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / Columns;
+        float maxBrickHeight = (availableHeight - totalVerticalPadding) / Rows;
 
         return Mathf.Min(maxBrickWidth, maxBrickHeight);
     }
@@ -180,14 +181,14 @@ public class BrickSpawner : MonoBehaviour {
         brickSize = CalculateBrickSize();
         currentBrickSize = brickSize;
 
-        float totalGridWidth = (columns * brickSize) + ((columns - 1) * padding);
+        float totalGridWidth = (Columns * brickSize) + ((Columns - 1) * Padding);
         startX = screenCenter.x - (totalGridWidth / 2f) + (brickSize / 2f);
-        startY = screenCenter.y + screenHalfHeight - topOffset - (brickSize / 2f);
+        startY = screenCenter.y + screenHalfHeight - TopOffset - (brickSize / 2f);
     }
 
     private Vector3 CalculateBrickPosition(int row, int col, float brickSize, float startX, float startY) {
-        float xPos = startX + col * (brickSize + padding);
-        float yPos = startY - row * (brickSize + padding);
+        float xPos = startX + col * (brickSize + Padding);
+        float yPos = startY - row * (brickSize + Padding);
         return new Vector3(xPos, yPos, 0f);
     }
 
@@ -204,14 +205,14 @@ public class BrickSpawner : MonoBehaviour {
 
         CalculateGridLayout(out float brickSize, out float startX, out float startY);
 
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < columns; col++) {
+        for (int row = 0; row < Rows; row++) {
+            for (int col = 0; col < Columns; col++) {
                 Vector3 position = CalculateBrickPosition(row, col, brickSize, startX, startY);
                 SpawnBrick(position, brickSize, row, col);
             }
         }
 
-        Debug.Log($"Spawned {rows * columns} bricks in {rows}x{columns} grid (size: {brickSize:F2})");
+        Debug.Log($"Spawned {Rows * Columns} bricks in {Rows}x{Columns} grid (size: {brickSize:F2})");
     }
 
     private void SpawnBrick(Vector3 position, float brickSize, int row, int col) {
@@ -300,7 +301,7 @@ public class BrickSpawner : MonoBehaviour {
         }
 
         brickView.SetSize(brickSize);
-        brickView.Initialize(entity, brickIdCounter, startingHealth);
+        brickView.Initialize(entity, brickIdCounter, StartingHealth);
 
         return brickView;
     }
@@ -454,24 +455,24 @@ public class BrickSpawner : MonoBehaviour {
 
         Gizmos.color = Color.cyan;
 
-        float availableWidth = (halfWidth * 2f) - (sideMargin * 2f);
-        float availableHeight = halfHeight - topOffset;
+        float availableWidth = (halfWidth * 2f) - (SideMargin * 2f);
+        float availableHeight = halfHeight - TopOffset;
 
-        float totalHorizontalPadding = padding * (columns - 1);
-        float totalVerticalPadding = padding * (rows - 1);
+        float totalHorizontalPadding = Padding * (Columns - 1);
+        float totalVerticalPadding = Padding * (Rows - 1);
 
-        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / columns;
-        float maxBrickHeight = (availableHeight - totalVerticalPadding) / rows;
+        float maxBrickWidth = (availableWidth - totalHorizontalPadding) / Columns;
+        float maxBrickHeight = (availableHeight - totalVerticalPadding) / Rows;
         float brickSize = Mathf.Min(maxBrickWidth, maxBrickHeight);
 
-        float totalGridWidth = (columns * brickSize) + ((columns - 1) * padding);
+        float totalGridWidth = (Columns * brickSize) + ((Columns - 1) * Padding);
         float startX = center.x - (totalGridWidth / 2f) + (brickSize / 2f);
-        float startY = center.y + halfHeight - topOffset - (brickSize / 2f);
+        float startY = center.y + halfHeight - TopOffset - (brickSize / 2f);
 
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < columns; col++) {
-                float xPos = startX + col * (brickSize + padding);
-                float yPos = startY - row * (brickSize + padding);
+        for (int row = 0; row < Rows; row++) {
+            for (int col = 0; col < Columns; col++) {
+                float xPos = startX + col * (brickSize + Padding);
+                float yPos = startY - row * (brickSize + Padding);
 
                 Gizmos.DrawWireCube(
                     new Vector3(xPos, yPos, 0f),

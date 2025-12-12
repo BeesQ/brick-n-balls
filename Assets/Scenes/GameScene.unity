@@ -474,13 +474,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCamera: {fileID: 0}
   wallSetup: {fileID: 0}
-  startingHealth: 3
   brickDepth: 1
-  rows: 3
-  columns: 8
-  padding: 0.1
-  topOffset: 1.6
-  sideMargin: 0.3
   brickVisualPrefab: {fileID: 8926957018122812425, guid: df8895d96c2e8c0449a1aff7a43c0bc3, type: 3}
 --- !u!1 &832575517
 GameObject:
@@ -611,7 +605,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8825ddb40b5e904ca5e127b604bdaf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballSpeed: 15
   ballMass: 1
   restitution: 1
   collisionPadding: 0.1
@@ -661,6 +654,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startingBalls: 3
+  ballSpeed: 15
+  brickRows: 3
+  brickColumns: 8
+  brickStartingHealth: 3
+  brickPadding: 0.1
+  brickTopOffset: 2.5
+  brickSideMargin: 0.3
 --- !u!1 &2089317688
 GameObject:
   m_ObjectHideFlags: 0
