@@ -107,7 +107,7 @@ public class ShootInput : MonoBehaviour {
 
         Vector2 spawnPosition = GetSpawnPosition();
         BallSpawner.Instance.SpawnBall(spawnPosition, currentAimDirection);
-        GameManager.Instance.OnBallShot();
+        GameEvents.BallShot();
     }
 
     private Vector2 GetSpawnPosition() {

@@ -105,7 +105,7 @@ public class BallView : MonoBehaviour {
             entityManager.DestroyEntity(linkedEntity);
         }
 
-        GameManager.Instance?.OnBallDestroyed();
+        GameEvents.BallDestroyed();
         Destroy(gameObject);
     }
 }

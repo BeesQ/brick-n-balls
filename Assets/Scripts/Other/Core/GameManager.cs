@@ -50,11 +50,17 @@ public class GameManager : MonoBehaviour {
     }
 
     private void OnEnable() {
-        GameEvents.OnAllBricksDestroyed += OnAllBricksDestroyed;
+        GameEvents.OnBallShot += HandleBallShot;
+        GameEvents.OnBallDestroyed += HandleBallDestroyed;
+        GameEvents.OnBrickHit += HandleBrickHit;
+        GameEvents.OnAllBricksDestroyed += HandleAllBricksDestroyed;
     }
 
     private void OnDisable() {
-        GameEvents.OnAllBricksDestroyed -= OnAllBricksDestroyed;
+        GameEvents.OnBallShot -= HandleBallShot;
+        GameEvents.OnBallDestroyed -= HandleBallDestroyed;
+        GameEvents.OnBrickHit -= HandleBrickHit;
+        GameEvents.OnAllBricksDestroyed -= HandleAllBricksDestroyed;
     }
 
     private void Start() {
@@ -80,7 +86,7 @@ public class GameManager : MonoBehaviour {
         return isGameActive && ballsRemaining > 0 && !isGameOver;
     }
 
-    public void OnBallShot() {
+    private void HandleBallShot() {
         if (isGameOver || !isGameActive)
             return;
 
@@ -88,18 +94,15 @@ public class GameManager : MonoBehaviour {
         activeBallsInPlay++;
 
         GameEvents.BallsRemainingChanged(ballsRemaining);
-        GameEvents.BallShot();
 
         Debug.Log($"Ball Shot -> Remaining: {ballsRemaining}, In Play: {activeBallsInPlay}");
     }
 
-    public void OnBallDestroyed() {
+    private void HandleBallDestroyed() {
         if (isGameOver || !isGameActive)
             return;
 
         activeBallsInPlay--;
-
-        GameEvents.BallDestroyed();
 
         Debug.Log($"Ball Destroyed -> Remaining: {ballsRemaining}, In Play: {activeBallsInPlay}");
 
@@ -108,17 +111,17 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void AddScore(int points) {
+    private void HandleBrickHit(int brickId, int remainingHealth) {
         if (isGameOver || !isGameActive)
             return;
 
-        currentScore += points;
+        currentScore += Consts.Scoring.PointsPerBrickHit;
         GameEvents.ScoreChanged(currentScore);
 
         Debug.Log($"Score: {currentScore}");
     }
 
-    private void OnAllBricksDestroyed() {
+    private void HandleAllBricksDestroyed() {
         Debug.Log("Victory!");
         TriggerGameOver();
     }

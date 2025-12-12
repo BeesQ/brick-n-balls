@@ -76,11 +76,10 @@ public class BrickView : MonoBehaviour, IDamageable {
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
 
-        GameManager.Instance?.AddScore(Consts.Scoring.PointsPerBrickHit);
+        GameEvents.BrickHit(brickId, currentHealth);
 
         if (IsAlive) {
             UpdateVisual();
-            GameEvents.BrickHit(brickId, currentHealth);
         }
         else {
             DestroyBrick();
