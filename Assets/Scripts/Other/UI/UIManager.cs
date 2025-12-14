@@ -70,7 +70,7 @@ public class UIManager : MonoBehaviour {
         if (gameOverPanel != null)
             gameOverPanel.SetActive(gameOver);
     }
-    #endregion
+    #endregion Panel Management
 
     #region UI Updates
     public void UpdateScore(int score) {
@@ -84,20 +84,22 @@ public class UIManager : MonoBehaviour {
             ballsRemainingText.text = $"Balls: {balls}";
         }
     }
-    #endregion
+    #endregion UI Updates
 
     #region Event Handlers
     private void OnGameStarted() { }
-    #endregion
+    #endregion Event Handlers
 
     #region Button Callbacks
     public void OnStartGameClicked() {
+        GameEvents.ButtonClicked();
         ShowGameHUD();
         GameManager.Instance?.ResetGame();
     }
 
     public void OnGoBackToMenuClicked() {
+        GameEvents.ButtonClicked();
         ShowMainMenu();
     }
-    #endregion
+    #endregion Button Callbacks
 }

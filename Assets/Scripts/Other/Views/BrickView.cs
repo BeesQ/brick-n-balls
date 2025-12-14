@@ -18,7 +18,7 @@ public class BrickView : MonoBehaviour, IDamageable {
     public int BrickId => brickId;
     public int CurrentHealth => currentHealth;
     public bool IsAlive => currentHealth > 0;
-    #endregion
+    #endregion Properties
 
     private bool IsWorldValid =>
         World.DefaultGameObjectInjectionWorld != null &&

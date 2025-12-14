@@ -211,7 +211,7 @@ public class WallSetup : MonoBehaviour {
         var material = new Unity.Physics.Material {
             Friction = 0f,
             Restitution = 1f,
-            CollisionResponse = CollisionResponsePolicy.Collide,
+            CollisionResponse = CollisionResponsePolicy.CollideRaiseCollisionEvents,
             FrictionCombinePolicy = Unity.Physics.Material.CombinePolicy.Minimum,
             RestitutionCombinePolicy = Unity.Physics.Material.CombinePolicy.Maximum
         };
@@ -230,6 +230,8 @@ public class WallSetup : MonoBehaviour {
         entityManager.AddComponentData(entity, new PhysicsCollider {
             Value = boxCollider
         });
+
+        entityManager.AddComponentData(entity, new WallPhysicsComponent());
 
         entityManager.AddSharedComponent(entity, new PhysicsWorldIndex {
             Value = 0

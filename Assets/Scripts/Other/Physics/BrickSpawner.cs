@@ -53,7 +53,7 @@ public class BrickSpawner : MonoBehaviour {
 
     #region Properties
     public int ActiveBrickCount => allBricks.FindAll(b => !b.IsDestroyed).Count;
-    #endregion
+    #endregion Properties
 
     private bool IsWorldValid =>
         World.DefaultGameObjectInjectionWorld != null &&

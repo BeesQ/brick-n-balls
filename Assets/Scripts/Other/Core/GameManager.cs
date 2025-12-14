@@ -32,14 +32,14 @@ public class GameManager : MonoBehaviour {
     public float BrickPadding => brickPadding;
     public float BrickTopOffset => brickTopOffset;
     public float BrickSideMargin => brickSideMargin;
-    #endregion
+    #endregion Config Properties
 
     #region Runtime Properties
     public int BallsRemaining => ballsRemaining;
     public int Score => currentScore;
     public bool IsGameOver => isGameOver;
     public bool IsGameActive => isGameActive;
-    #endregion
+    #endregion Runtime Properties
 
     private void Awake() {
         if (Instance != null && Instance != this) {
