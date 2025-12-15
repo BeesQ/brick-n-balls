@@ -16,11 +16,13 @@ public class BallSpawner : MonoBehaviour {
     [Header("Prefab")]
     [SerializeField] private GameObject ballVisualPrefab;
 
-
     private EntityManager entityManager;
     private int ballIdCounter = 0;
     private Scene gameScene;
     private float ballRadius;
+    private Transform ballsParent;
+
+    public float BallRadius => ballRadius;
 
     #region GameManager Values
     private float BallSpeed => GameManager.Instance?.BallSpeed ?? 15f;
@@ -47,7 +49,6 @@ public class BallSpawner : MonoBehaviour {
         }
 
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
         gameScene = SceneManager.GetSceneByName("GameScene");
     }
 
@@ -73,6 +74,19 @@ public class BallSpawner : MonoBehaviour {
         }
 
         ballRadius = 0.3f;
+    }
+
+    private void EnsureBallsParent() {
+        if (ballsParent != null)
+            return;
+
+        GameObject parentGO = new GameObject("Balls");
+
+        if (gameScene.IsValid()) {
+            SceneManager.MoveGameObjectToScene(parentGO, gameScene);
+        }
+
+        ballsParent = parentGO.transform;
     }
 
     public void SpawnBall(Vector2 spawnPosition, Vector2 direction) {
@@ -152,15 +166,14 @@ public class BallSpawner : MonoBehaviour {
     }
 
     private void CreateBallVisual(Entity entity, float3 position) {
+        EnsureBallsParent();
+
         GameObject visualGO = Instantiate(
             ballVisualPrefab,
             new Vector3(position.x, position.y, 0f),
-            Quaternion.identity
+            Quaternion.identity,
+            ballsParent
         );
-
-        if (gameScene.IsValid()) {
-            SceneManager.MoveGameObjectToScene(visualGO, gameScene);
-        }
 
         BallView ballView = visualGO.GetComponent<BallView>();
         if (ballView == null) {

@@ -1,8 +1,10 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
+using Unity.Transforms;
 
 [UpdateInGroup(typeof(PhysicsSystemGroup))]
 [UpdateAfter(typeof(PhysicsSimulationGroup))]
@@ -20,6 +22,7 @@ public partial struct BallWallCollisionSystem : ISystem {
         var collisionJob = new BallWallCollisionJob {
             BallLookup = SystemAPI.GetComponentLookup<BallPhysicsComponent>(true),
             WallLookup = SystemAPI.GetComponentLookup<WallPhysicsComponent>(true),
+            TransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
             CollisionEvents = WallCollisionEventBuffer.Instance.Events.AsParallelWriter()
         };
 
@@ -36,6 +39,7 @@ public static class WallCollisionJobSync {
 public struct BallWallCollisionJob : ICollisionEventsJob {
     [ReadOnly] public ComponentLookup<BallPhysicsComponent> BallLookup;
     [ReadOnly] public ComponentLookup<WallPhysicsComponent> WallLookup;
+    [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
     public NativeQueue<WallCollisionEvent>.ParallelWriter CollisionEvents;
 
     public void Execute(CollisionEvent collisionEvent) {
@@ -47,10 +51,30 @@ public struct BallWallCollisionJob : ICollisionEventsJob {
         bool aIsWall = WallLookup.HasComponent(entityA);
         bool bIsWall = WallLookup.HasComponent(entityB);
 
-        if ((aIsBall && bIsWall) || (bIsBall && aIsWall)) {
-            CollisionEvents.Enqueue(new WallCollisionEvent());
+        Entity ballEntity = Entity.Null;
+        float3 normalTowardsBall = float3.zero;
+
+        if (aIsBall && bIsWall) {
+            ballEntity = entityA;
+            normalTowardsBall = collisionEvent.Normal;
+        }
+        else if (bIsBall && aIsWall) {
+            ballEntity = entityB;
+            normalTowardsBall = -collisionEvent.Normal;
+        }
+
+        if (ballEntity != Entity.Null) {
+            float3 ballPosition = TransformLookup[ballEntity].Position;
+
+            CollisionEvents.Enqueue(new WallCollisionEvent {
+                BallPosition = ballPosition,
+                NormalTowardsBall = normalTowardsBall
+            });
         }
     }
 }
 
-public struct WallCollisionEvent { }
+public struct WallCollisionEvent {
+    public float3 BallPosition;
+    public float3 NormalTowardsBall;
+}

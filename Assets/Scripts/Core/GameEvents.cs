@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public static class GameEvents {
     #region Score Events
@@ -30,10 +31,10 @@ public static class GameEvents {
     #endregion Ball Events
 
     #region Brick Events
-    public static event Action<int, int> OnBrickHit;
+    public static event Action<int, int, Vector3> OnBrickHit;
 
-    public static void BrickHit(int brickId, int remainingHealth) {
-        OnBrickHit?.Invoke(brickId, remainingHealth);
+    public static void BrickHit(int brickId, int previousHealth, Vector3 position) {
+        OnBrickHit?.Invoke(brickId, previousHealth, position);
     }
 
     public static event Action<int> OnBrickDestroyed;
@@ -50,10 +51,10 @@ public static class GameEvents {
     #endregion Brick Events
 
     #region Wall Events
-    public static event Action OnWallHit;
+    public static event Action<Vector3> OnWallHit;
 
-    public static void WallHit() {
-        OnWallHit?.Invoke();
+    public static void WallHit(Vector3 position) {
+        OnWallHit?.Invoke(position);
     }
     #endregion Wall Events
 

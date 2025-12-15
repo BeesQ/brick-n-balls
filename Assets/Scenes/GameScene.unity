@@ -169,7 +169,7 @@ MonoBehaviour:
   wallSprite: {fileID: 21300000, guid: 533e1756ec7d0fb46bc14abc41f61593, type: 3}
   wallColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   wallSortingOrder: -1
-  wallSortingLayer: Default
+  wallSortingLayerID: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -557,8 +557,9 @@ Transform:
   - {fileID: 1231141394}
   - {fileID: 635945006}
   - {fileID: 2089317689}
-  - {fileID: 1743924352}
   - {fileID: 1375439019}
+  - {fileID: 1987431697}
+  - {fileID: 1743924352}
   - {fileID: 175951585}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -706,6 +707,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1378d20b02f5694fbd2f25f06292094, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1987431696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1987431697}
+  - component: {fileID: 1987431698}
+  m_Layer: 0
+  m_Name: ParticleManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1987431697
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1987431696}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1055998206}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1987431698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1987431696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1f31fc80c1a29748bdfd234d6c7f8af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  brickHitParticlePrefab: {fileID: 7306595810949350070, guid: 4e93c9fd5c3c84c4687c62a82408dfc7, type: 3}
+  wallHitParticlePrefab: {fileID: 7306595810949350070, guid: 4e93c9fd5c3c84c4687c62a82408dfc7, type: 3}
+  brickParticlePoolSize: 10
+  wallParticlePoolSize: 5
+  sortingLayerID: -393816363
+  sortingOrder: 10
 --- !u!1 &2089317688
 GameObject:
   m_ObjectHideFlags: 0

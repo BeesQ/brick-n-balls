@@ -1,4 +1,5 @@
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class WallCollisionEventBuffer : MonoBehaviour {
@@ -27,8 +28,17 @@ public class WallCollisionEventBuffer : MonoBehaviour {
         WallCollisionJobSync.LastCollisionJobHandle.Complete();
 
         while (Events.TryDequeue(out WallCollisionEvent collisionEvent)) {
-            GameEvents.WallHit();
+            Vector3 contactPosition = CalculateContactPosition(collisionEvent);
+            GameEvents.WallHit(contactPosition);
         }
+    }
+
+    private Vector3 CalculateContactPosition(WallCollisionEvent collisionEvent) {
+        float ballRadius = BallSpawner.Instance?.BallRadius ?? 0.3f;
+
+        float3 contactPoint = collisionEvent.BallPosition - collisionEvent.NormalTowardsBall * ballRadius;
+
+        return new Vector3(contactPoint.x, contactPoint.y, contactPoint.z);
     }
 
     private void OnDestroy() {

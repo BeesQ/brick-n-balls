@@ -36,7 +36,12 @@ public class CollisionEventBuffer : MonoBehaviour {
         BrickView brick = BrickSpawner.Instance?.GetBrickById(collisionEvent.BrickId);
 
         if (brick != null && brick.IsAlive) {
+            int previousHealth = brick.CurrentHealth;
+            Vector3 position = brick.transform.position;
+
             brick.TakeDamage(1);
+
+            GameEvents.BrickHit(collisionEvent.BrickId, previousHealth, position);
         }
     }
 

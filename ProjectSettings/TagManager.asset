@@ -50,6 +50,9 @@ TagManager:
   - name: Cannon
     uniqueID: 2181920299
     locked: 0
+  - name: Particle
+    uniqueID: 3901150933
+    locked: 0
   m_RenderingLayers:
   - Default
   - Light Layer 1

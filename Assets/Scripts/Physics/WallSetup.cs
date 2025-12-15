@@ -18,7 +18,8 @@ public class WallSetup : MonoBehaviour {
     [SerializeField] private Sprite wallSprite;
     [SerializeField] private Color wallColor = Color.gray;
     [SerializeField] private int wallSortingOrder = -1;
-    [SerializeField] private string wallSortingLayer = "Default";
+    [SortingLayer]
+    [SerializeField] private int wallSortingLayerID;
 
     private EntityManager entityManager;
 
@@ -254,7 +255,7 @@ public class WallSetup : MonoBehaviour {
         SpriteRenderer sr = wallGO.AddComponent<SpriteRenderer>();
         sr.color = wallColor;
         sr.sortingOrder = wallSortingOrder;
-        sr.sortingLayerName = wallSortingLayer;
+        sr.sortingLayerID = wallSortingLayerID;
 
         if (wallSprite != null) {
             sr.sprite = wallSprite;

@@ -76,8 +76,6 @@ public class BrickView : MonoBehaviour, IDamageable {
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
 
-        GameEvents.BrickHit(brickId, currentHealth);
-
         if (IsAlive) {
             UpdateVisual();
         }
