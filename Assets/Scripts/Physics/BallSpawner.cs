@@ -155,7 +155,8 @@ public class BallSpawner : MonoBehaviour {
         });
 
         entityManager.AddComponentData(entity, new BallPhysicsComponent {
-            BallId = ballIdCounter
+            BallId = ballIdCounter,
+            Speed = BallSpeed
         });
 
         entityManager.AddSharedComponent(entity, new PhysicsWorldIndex {

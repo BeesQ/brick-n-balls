@@ -753,8 +753,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   brickHitParticlePrefab: {fileID: 7306595810949350070, guid: 4e93c9fd5c3c84c4687c62a82408dfc7, type: 3}
   wallHitParticlePrefab: {fileID: 7306595810949350070, guid: 4e93c9fd5c3c84c4687c62a82408dfc7, type: 3}
-  brickParticlePoolSize: 10
-  wallParticlePoolSize: 5
   sortingLayerID: -393816363
   sortingOrder: 10
 --- !u!1 &2089317688

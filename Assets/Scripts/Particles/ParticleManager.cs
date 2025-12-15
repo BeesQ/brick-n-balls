@@ -38,19 +38,19 @@ public class ParticleManager : MonoBehaviour {
         GameEvents.OnWallHit -= HandleWallHit;
     }
 
-    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position) {
+    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position, float scale) {
         if (brickHitParticlePrefab == null)
             return;
 
         Color particleColor = Consts.GetColorForHealth(previousHealth);
-        SpawnParticle(brickHitParticlePrefab, position, particleColor);
+        SpawnParticle(brickHitParticlePrefab, position, particleColor, scale);
     }
 
     private void HandleWallHit(Vector3 position) {
         if (wallHitParticlePrefab == null)
             return;
 
-        SpawnParticle(wallHitParticlePrefab, position, Color.grey);
+        SpawnParticle(wallHitParticlePrefab, position, Color.grey, 1f);
     }
 
     private void EnsureParticlesParent() {
@@ -66,10 +66,12 @@ public class ParticleManager : MonoBehaviour {
         particlesParent = parentGO.transform;
     }
 
-    private void SpawnParticle(ParticleSystem prefab, Vector3 position, Color color) {
+    private void SpawnParticle(ParticleSystem prefab, Vector3 position, Color color, float scale) {
         EnsureParticlesParent();
 
         ParticleSystem ps = Instantiate(prefab, position, Quaternion.identity, particlesParent);
+
+        ps.transform.localScale = Vector3.one * scale;
 
         var main = ps.main;
         main.startColor = color;

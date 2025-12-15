@@ -120,7 +120,7 @@ public class AudioManager : MonoBehaviour {
     #endregion Sound Effects
 
     #region Event Handlers
-    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position) {
+    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position, float scale) {
         int remainingHealth = previousHealth - 1;
         if (remainingHealth > 0) {
             PlaySound(brickHitClip);

@@ -31,10 +31,10 @@ public static class GameEvents {
     #endregion Ball Events
 
     #region Brick Events
-    public static event Action<int, int, Vector3> OnBrickHit;
+    public static event Action<int, int, Vector3, float> OnBrickHit;
 
-    public static void BrickHit(int brickId, int previousHealth, Vector3 position) {
-        OnBrickHit?.Invoke(brickId, previousHealth, position);
+    public static void BrickHit(int brickId, int previousHealth, Vector3 position, float scale) {
+        OnBrickHit?.Invoke(brickId, previousHealth, position, scale);
     }
 
     public static event Action<int> OnBrickDestroyed;

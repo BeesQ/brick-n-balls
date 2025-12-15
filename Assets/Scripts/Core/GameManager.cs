@@ -111,7 +111,7 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position) {
+    private void HandleBrickHit(int brickId, int previousHealth, Vector3 position, float scale) {
         if (isGameOver || !isGameActive)
             return;
 

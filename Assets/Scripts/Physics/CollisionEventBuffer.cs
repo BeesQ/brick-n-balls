@@ -38,10 +38,11 @@ public class CollisionEventBuffer : MonoBehaviour {
         if (brick != null && brick.IsAlive) {
             int previousHealth = brick.CurrentHealth;
             Vector3 position = brick.transform.position;
+            float scale = brick.transform.localScale.x;
 
             brick.TakeDamage(1);
 
-            GameEvents.BrickHit(collisionEvent.BrickId, previousHealth, position);
+            GameEvents.BrickHit(collisionEvent.BrickId, previousHealth, position, scale);
         }
     }
 
